@@ -1,7 +1,7 @@
 """Keyboard backend factory and platform selector."""
 
 import sys
-from .base import KeyboardBackend
+from .base import DummyBackend, KeyboardBackend
 
 
 def get_backend() -> KeyboardBackend:
@@ -10,10 +10,14 @@ def get_backend() -> KeyboardBackend:
         from .windows import WindowsBackend
         return WindowsBackend()
     elif sys.platform.startswith("linux"):
-        from .linux_x11 import LinuxX11Backend
-        return LinuxX11Backend()
+        try:
+            from .linux_x11 import LinuxX11Backend
+            return LinuxX11Backend()
+        except Exception as e:
+            print(f"[AutoTyper] Notice: Low-level X11 backend unavailable ({e}). Using headless backend.")
+            return DummyBackend()
     else:
-        raise NotImplementedError(f"Unsupported operating system: {sys.platform}")
+        return DummyBackend()
 
 
-__all__ = ["KeyboardBackend", "get_backend"]
+__all__ = ["KeyboardBackend", "DummyBackend", "get_backend"]

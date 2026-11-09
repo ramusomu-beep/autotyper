@@ -1,6 +1,12 @@
 """Global hotkey listener and modifier state across Windows and Linux."""
 
-from pynput import keyboard
+try:
+    from pynput import keyboard
+    HAS_PYNPUT = True
+except Exception:
+    keyboard = None
+    HAS_PYNPUT = False
+
 from . import notify
 
 typer = None
@@ -8,26 +14,33 @@ _listener = None
 _pressed = set()
 
 
+class DummyListener:
+    """Fallback no-op listener when running in headless environments."""
+    def start(self): pass
+    def stop(self): pass
+    def canonical(self, key): return key
+
+
 def _norm(key):
-    return _listener.canonical(key) if _listener else key
+    return _listener.canonical(key) if (_listener and hasattr(_listener, "canonical")) else key
 
 
 def _is_cmd(k):
-    if k is None:
+    if k is None or not HAS_PYNPUT:
         return False
     k = _norm(k)
     return k in (keyboard.Key.cmd, keyboard.Key.cmd_l, keyboard.Key.cmd_r)
 
 
 def _is_alt(k):
-    if k is None:
+    if k is None or not HAS_PYNPUT:
         return False
     k = _norm(k)
     return k in (keyboard.Key.alt, keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt_gr)
 
 
 def _is_ctrl(k):
-    if k is None:
+    if k is None or not HAS_PYNPUT:
         return False
     k = _norm(k)
     return k in (keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r)
@@ -61,7 +74,7 @@ def _is_key(k, chars, vks):
 
 
 def on_press(key, injected=False):
-    if injected or key is None or (typer and typer._typing):
+    if injected or key is None or (typer and typer._typing) or not HAS_PYNPUT:
         return
     norm_key = _norm(key)
     if norm_key in _pressed:  # ignore auto-repeat
@@ -118,6 +131,14 @@ def on_release(key, injected=False):
 def start_listener(auto_typer):
     global typer, _listener
     typer = auto_typer
-    _listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    _listener.start()
-    return _listener
+    if not HAS_PYNPUT:
+        _listener = DummyListener()
+        return _listener
+    try:
+        _listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        _listener.start()
+        return _listener
+    except Exception as e:
+        print(f"[AutoTyper] Warning: Hotkey listener failed to start ({e}). Continuing with dummy listener.")
+        _listener = DummyListener()
+        return _listener

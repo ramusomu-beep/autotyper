@@ -2,8 +2,6 @@
 
 import os
 
-from pynput import keyboard
-
 # Default file location to read text from:
 DEFAULT_FILE = os.path.expanduser("~/autotype_text.txt")
 
@@ -21,18 +19,12 @@ COUNTDOWN_SECONDS = 5
 
 PID_FILE = os.path.expanduser("~/.autotyper.pid")
 
-KEY_EQUALS = keyboard.KeyCode.from_char("=")
-KEY_PLUS = keyboard.KeyCode.from_char("+")
-KEY_MINUS = keyboard.KeyCode.from_char("-")
-KEY_UNDERSCORE = keyboard.KeyCode.from_char("_")
-KEY_Z = keyboard.KeyCode.from_char("z")
-KEY_C = keyboard.KeyCode.from_char("c")
-KEY_X = keyboard.KeyCode.from_char("x")
-
 # Spaces per indent level (used when the file uses tabs)
 TAB_WIDTH = 4
+
 # After Enter, delete the IDE's auto-inserted indentation so the file's own
 # leading whitespace is used instead. Set False if your editor misbehaves.
 SMART_INDENT = True
+
 # Slightly vary the delay between keys so typing looks less mechanical.
 HUMAN_JITTER = True

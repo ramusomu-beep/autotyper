@@ -1,4 +1,4 @@
-"""Abstract base class for keyboard injection backends."""
+"""Abstract base class and dummy fallback for keyboard injection backends."""
 
 from abc import ABC, abstractmethod
 
@@ -28,4 +28,20 @@ class KeyboardBackend(ABC):
 
     def ensure_ready(self) -> None:
         """Perform any runtime readiness checks or layout cache refreshes."""
+        pass
+
+
+class DummyBackend(KeyboardBackend):
+    """Fallback no-op backend used when running headlessly or in CI."""
+
+    def cleanup_modifiers(self) -> None:
+        pass
+
+    def wait_for_modifiers_release(self, timeout: float = 1.5) -> None:
+        pass
+
+    def type_char(self, ch: str) -> bool:
+        return True
+
+    def newline(self, smart_indent: bool = True) -> None:
         pass

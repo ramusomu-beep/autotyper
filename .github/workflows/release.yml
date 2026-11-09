@@ -65,7 +65,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-dev libxtst-dev libxext-dev
+          sudo apt-get install -y libx11-dev libxtst-dev libxext-dev xvfb
 
       - name: Install dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
 
       - name: Run Self Test
         run: |
-          python autotyper.py --self-test
+          xvfb-run -a python autotyper.py --self-test
 
       - name: Build Linux Executable
         run: |
