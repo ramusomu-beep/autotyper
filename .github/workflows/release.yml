@@ -1,0 +1,125 @@
+name: Release AutoTyper
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Release
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Windows Executable
+        run: |
+          python build.py
+
+      - name: Package Windows Artifacts
+        run: |
+          mkdir release-windows
+          copy dist\AutoTyper.exe release-windows\
+          copy README.md release-windows\
+          copy HP_Keyboard_Lock.ahk release-windows\
+          copy Start_AutoTyper.bat release-windows\
+          copy Start_Keyboard_Lock.bat release-windows\
+          compress-archive -Path release-windows\* -DestinationPath AutoTyper-Windows-x64.zip
+
+      - name: Upload Windows Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoTyper-Windows-x64
+          path: AutoTyper-Windows-x64.zip
+
+  build-linux:
+    name: Build Linux Release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxtst-dev libxext-dev
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Run Self Test
+        run: |
+          python autotyper.py --self-test
+
+      - name: Build Linux Executable
+        run: |
+          python build.py
+
+      - name: Package Linux Artifacts
+        run: |
+          mkdir release-linux
+          cp dist/AutoTyper release-linux/
+          cp README.md release-linux/
+          tar -czvf AutoTyper-Linux-x86_64.tar.gz -C release-linux .
+
+      - name: Upload Linux Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoTyper-Linux-x86_64
+          path: AutoTyper-Linux-x86_64.tar.gz
+
+  create-release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AutoTyper-Windows-x64
+
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AutoTyper-Linux-x86_64
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            AutoTyper-Windows-x64.zip
+            AutoTyper-Linux-x86_64.tar.gz
+          name: AutoTyper ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true

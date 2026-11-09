@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autotyper"
+version = "2.0.0"
+description = "High-speed universal AutoTyper app for Linux and Windows with modern GUI and remote keyboard support."
+readme = "README.md"
+authors = [{ name = "ramusomu-beep" }]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "pynput>=1.7.6",
+    "PyQt5>=5.15.0",
+    "python-xlib>=0.33; platform_system=='Linux'",
+]
+
+[project.scripts]
+autotyper = "autotyper.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["autotyper*"]

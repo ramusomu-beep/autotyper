@@ -1,4 +1,4 @@
-"""AutoTyper package - Windows + Remote Keyboard auto-typing."""
+"""AutoTyper package - High-speed, remote-compatible auto-typing for Linux and Windows."""
 
 from .engine import AutoTyper
 

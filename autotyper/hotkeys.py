@@ -1,7 +1,6 @@
-"""Global hotkey listener and modifier state."""
+"""Global hotkey listener and modifier state across Windows and Linux."""
 
 from pynput import keyboard
-
 from . import notify
 
 typer = None
@@ -69,13 +68,14 @@ def on_press(key, injected=False):
         return
     _pressed.add(norm_key)
 
-    if norm_key == _norm(keyboard.Key.esc):
+    # Cancel Hotkeys: Escape or Page Down
+    if norm_key in (_norm(keyboard.Key.esc), _norm(keyboard.Key.page_down), keyboard.Key.esc, keyboard.Key.page_down):
         if typer:
             typer.cancel()
         return
 
-    # Primary Non-F Universal Shortcuts:
-    # Ctrl + Alt + Space, Ctrl + Alt + Enter, or Ctrl + Alt + X / Z
+    # Toggle Shortcuts:
+    # 1. Ctrl + Alt + Space / Enter / X / Z
     if has_ctrl() and has_alt():
         if norm_key in (_norm(keyboard.Key.space), _norm(keyboard.Key.enter)) or _is_key(
             key, ("x", "X", "\x18", "z", "Z", "\x1a"), (0x58, 0x5A)
@@ -88,18 +88,19 @@ def on_press(key, injected=False):
                 typer.cancel()
             return
 
-    # Secondary shortcut: Windows + Alt (in either press order)
+    # 2. Windows / Super + Alt
     if (_is_alt(norm_key) and has_cmd()) or (_is_cmd(norm_key) and has_alt()):
         if typer:
             typer.toggle()
         return
 
-    # Function key fallback: F8
-    if norm_key == _norm(keyboard.Key.f8):
+    # 3. Function keys: F8 or F3
+    if norm_key in (_norm(keyboard.Key.f8), _norm(keyboard.Key.f3), keyboard.Key.f8, keyboard.Key.f3):
         if typer:
             typer.toggle()
         return
 
+    # Speed adjustments: Alt + = (Slower) / Alt + - (Faster)
     if _is_key(key, ("=", "+"), (0xBB, 0x6B)):
         if has_alt() and typer and not typer._typing:
             typer.adjust_delay(+0.02)
