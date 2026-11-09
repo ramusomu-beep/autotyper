@@ -597,6 +597,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def run_gui(file_path=DEFAULT_FILE):
+    if sys.platform.startswith("linux"):
+        os.environ.setdefault("QT_XCB_GL_INTEGRATION", "none")
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("AutoTyper")
     window = MainWindow(file_path=file_path)
